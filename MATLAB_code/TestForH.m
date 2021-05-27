@@ -10,11 +10,11 @@ clc
 %% DATA INPUT
 
 minx = -1;
-stepx = 0.5;
+stepx = 1;
 maxx = 1;
 
 miny = -1;
-stepy = 0.5;
+stepy = 1;
 maxy = 1;
 
 mint = 0;
