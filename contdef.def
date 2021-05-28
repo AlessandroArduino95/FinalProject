@@ -9,7 +9,7 @@ From: debian:10
 	python3 -m pip install "matplotlib=3.4.2"
 	mkdir $SINGULARITY_ROOTFS/Final_project 
  	cd $SINGULARITY_ROOTFS/Final_project
-	git clone https://github.com/AlessandroArduino95/FinalProject.git && make
+	git clone https://github.com/AlessandroArduino95/FinalProject.git
 	NOW_VAR=`date`
 	echo "export NOW_VAR=\"${NOW_VAR}\"" >> $SINGULARITY_ENVIRONMENT
 
