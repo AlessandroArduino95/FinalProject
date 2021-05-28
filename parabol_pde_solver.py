@@ -9,6 +9,9 @@ from scipy.sparse import linalg
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator
 
+# RESOURCE USAGE
+import time
+import tracemalloc
 # FUNCTIONS
 
 
@@ -148,7 +151,9 @@ def f_fun(node):
 
 
 # TESTING FUNCTIONS
-extr = 2
+tracemalloc.start()
+starttime = time.time()
+extr = 10
 step = 0.1
 
 
@@ -173,9 +178,47 @@ H, fv = phf_calc(nodes, topology, area, vor_cells)
 
 dir_nodes = np.array(np.concatenate((range(side), range( side * (side-1), side**2, 1), range(side, side*(side-1), side), range(2*side-1, side*(side-1), side))))
 fv, H = dirichlet_bc(H, fv, uv_true, dir_nodes, penalty=10**15)
+
+# BC plot
 plt.scatter(nodes[:,0], nodes[:,1])
 plt.scatter(nodes[dir_nodes[:],0], nodes[dir_nodes[:],1])
-plt.show()
+plt.title('NODES OF THE FE MESH')
+plt.xlabel('x axis')
+plt.ylabel('y axis')
+plt.legend(['Computed nodes', 'Dirichlet BC nodes'])
+plt.savefig('bcplot.png')
+
+
 uv, info = linalg.cg(H, fv, atol=10**(-50), tol=10**(-50))
 
-print(np.max(np.abs(uv-uv_true)))
+maxerr = np.max(np.abs(uv-uv_true))
+
+
+# CODE FOR PLOT
+x = np.array([x]*len(x))
+y = np.array([y]*len(x)).transpose()
+z = uv.reshape(len(x),len(x))
+
+
+fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+
+# Plot the surface.
+surf = ax.plot_surface(x, y, z, cmap=cm.coolwarm, linewidth=0, antialiased=False)
+
+# Customize the z axis.
+ax.zaxis.set_major_locator(LinearLocator(10))
+# A StrMethodFormatter is used automatically
+ax.zaxis.set_major_formatter('{x:.02f}')
+
+plt.savefig('Solution of the PDE')
+
+endtime = time.time()
+currentmem, peakmem = tracemalloc.get_traced_memory()
+f = open("results.txt", "w")
+f.write('RESULTS:\n')
+f.write('max absolute error: ' + str(maxerr) + '\n')
+f.write('Current used memory: ' + str(currentmem/(1024**2)) + ' MB\nPeak used memory: ' + str(peakmem/(1024**2)) + ' MB\n')
+f.write('Total elapsed time: ' + str(endtime - starttime) + ' s\n')
+f.close()
+tracemalloc.stop()
+
