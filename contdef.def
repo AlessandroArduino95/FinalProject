@@ -6,8 +6,7 @@ From: debian:10
 	apt-get install -y python3 python3-pip git
 	python3 -m pip install "numpy==1.20.3"
 	python3 -m pip install "scipy==1.6.3"
-	python3 -m pip install "matplotlib==1.6.3"
-	python3 -m pip install "scipy==1.6.3"
+	python3 -m pip install "matplotlib=3.4.2"
 	mkdir $SINGULARITY_ROOTFS/Final_project 
  	cd $SINGULARITY_ROOTFS/Final_project
 	git clone https://github.com/AlessandroArduino95/FinalProject.git && make
