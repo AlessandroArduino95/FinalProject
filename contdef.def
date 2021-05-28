@@ -3,8 +3,10 @@ From: debian:10
 
 %post
 	apt-get update
-	apt-get install -y python3.9 python3-pip git
+	apt-get install -y python3 python3-pip git
 	python3 -m pip install "numpy==1.20.3"
+	python3 -m pip install "scipy==1.6.3"
+	python3 -m pip install "matplotlib==1.6.3"
 	python3 -m pip install "scipy==1.6.3"
 	mkdir $SINGULARITY_ROOTFS/Final_project 
  	cd $SINGULARITY_ROOTFS/Final_project
@@ -15,6 +17,7 @@ From: debian:10
 %runscript
 	echo "Container was created $NOW_VAR"
 	python3 /Final_project/FinalProject/parabol_pde_solver.py 
+	echo "Execution completed"
 
 %labels
 	Author AlessandroArduino
