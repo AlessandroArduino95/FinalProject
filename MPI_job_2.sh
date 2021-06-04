@@ -15,4 +15,4 @@ spack load openmpi@3.1.4
 cd $SLURM_SUBMIT_DIR
 
 singularity exec tflow_opencv.sif \
-mpirun -np 2 python3 -m mpi4py 
+mpirun -np 2 python3 -m mpi4py /FinalProject/MPI_parabol_pde_solver.py

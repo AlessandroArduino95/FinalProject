@@ -7,9 +7,9 @@
 #SBATCH --mail-type BEGIN,END,FAIL
 #SBATCH --partition allgroups
 #SBATCH --ntasks 1
-#SBATCH --mem 30M
+#SBATCH --mem 1G
 #SBATCH --time 00:10:00
 
 cd $SLURM_SUBMIT_DIR
 
-srun singularity exec fpcont.sif python3 script.py
+srun singularity exec fpcont.sif python3 /FinalProject/parabol_pde_solver.py
