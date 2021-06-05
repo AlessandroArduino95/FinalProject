@@ -1,8 +1,8 @@
 #!/bin/sh
 
 #SBATCH --job-name PDE_MPI_2
-#SBATCH --error err_%j.txt
-#SBATCH --output out_%j.txt
+#SBATCH --error err_%x.txt
+#SBATCH --output out_%x.txt
 #SBATCH --mail-user alessandroarduino95@gmail.com
 #SBATCH --mail-type BEGIN,END,FAIL
 #SBATCH --partition allgroups
@@ -14,5 +14,5 @@ spack load openmpi@3.1.4
 
 cd $SLURM_SUBMIT_DIR
 
-singularity exec tflow_opencv.sif \
+singularity exec fpcont.sif \
 mpirun -np 2 python3 -m mpi4py /FinalProject/MPI_parabol_pde_solver.py

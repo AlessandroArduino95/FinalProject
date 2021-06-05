@@ -1,8 +1,8 @@
 #!/bin/sh
 
 #SBATCH --job-name serialPDE
-#SBATCH --error err_%j.txt
-#SBATCH --output out_%j.txt
+#SBATCH --error err_%x.txt
+#SBATCH --output out_%x.txt
 #SBATCH --mail-user alessandroarduino95@gmail.com
 #SBATCH --mail-type BEGIN,END,FAIL
 #SBATCH --partition allgroups

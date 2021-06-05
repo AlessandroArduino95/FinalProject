@@ -7,7 +7,6 @@ From: debian:10
 	apt-get install -y libopenmpi-dev openmpi-bin
 	python3 -m pip install "numpy==1.20.3"
 	python3 -m pip install "scipy==1.6.3"
-	python3 -m pip install "matplotlib==3.4.2"
 	python3 -m pip install "mpi4py==3.0.3"
 	mkdir $SINGULARITY_ROOTFS/Final_project 
  	cd $SINGULARITY_ROOTFS/Final_project

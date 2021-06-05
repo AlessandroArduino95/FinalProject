@@ -1,12 +1,18 @@
 # CODE FOR ADVANCE TOPICS, SOLVES A PARABOLIC PARTIAL DIFFERENTIAL EQUATION ON A 2D SQUARE DOMAIN
 
 # IMPORT OF LIBRARIES
+import matplotlib.pyplot as plt
 import numpy as np  # arrays and numerical application
 from mpi4py import MPI
 from scipy import sparse  # sparse matrices
 from scipy.sparse import linalg
 import math
+from matplotlib import cm
+from matplotlib.ticker import LinearLocator
 
+# RESOURCE USAGE
+import time
+import tracemalloc
 
 
 # FUNCTIONS
@@ -136,6 +142,11 @@ size = comm.Get_size()
 root_pr = 0
 assert size > 1
 
+# TIME AND RESOURCES
+if rank == root_pr:
+    tracemalloc.start()
+    starttime = time.time()
+
 # DEFINE THINGS NOT CALCULATED EVERYWHERE
 sendnodes = None
 sendtop = None
@@ -146,8 +157,8 @@ vor_cells = None
 fv = None
 
 # DOMAIN INIZIALIZATION
-extr = 5
-step = 0.025
+extr = 10
+step = 0.1
 
 # SOME EARLY CALCULATIONS ON THE PROBLEM SIZE
 # NODES
@@ -249,7 +260,45 @@ if rank == root_pr:
     dir_nodes = np.array(np.concatenate((range(side), range(side * (side - 1), side ** 2, 1),
                                          range(side, side * (side - 1), side),
                                          range(2 * side - 1, side * (side - 1), side))))
+    # BC plot
+    plt.scatter(nodes[:, 0], nodes[:, 1])
+    plt.scatter(nodes[dir_nodes[:], 0], nodes[dir_nodes[:], 1])
+    plt.title('NODES OF THE FE MESH')
+    plt.xlabel('x axis')
+    plt.ylabel('y axis')
+    plt.legend(['Computed nodes', 'Dirichlet BC nodes'])
+    plt.savefig('bcplot.png')
 
     fv, H = dirichlet_bc(H, fv, uv_true, dir_nodes, penalty=10 ** 15)
 
     uv, info = linalg.cg(H, fv, atol=10 ** (-50), tol=10 ** (-50))
+
+    maxerr = np.max(np.abs(uv - uv_true))
+
+    # CODE FOR PLOT
+    x = np.array([x] * len(x))
+    y = np.array([y] * len(x)).transpose()
+    z = uv.reshape(len(x), len(x))
+
+    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+
+    # Plot the surface.
+    surf = ax.plot_surface(x, y, z, cmap=cm.coolwarm, linewidth=0, antialiased=False)
+
+    # Customize the z axis.
+    ax.zaxis.set_major_locator(LinearLocator(10))
+    # A StrMethodFormatter is used automatically
+    ax.zaxis.set_major_formatter('{x:.02f}')
+
+    plt.savefig('Solution of the PDE')
+
+    endtime = time.time()
+    currentmem, peakmem = tracemalloc.get_traced_memory()
+    f = open("results.txt", "w")
+    f.write('RESULTS:\n')
+    f.write('max absolute error: ' + str(maxerr) + '\n')
+    f.write('Current used memory: ' + str(currentmem / (1024 ** 2)) + ' MB\nPeak used memory: ' + str(
+        peakmem / (1024 ** 2)) + ' MB\n')
+    f.write('Total elapsed time: ' + str(endtime - starttime) + ' s\n')
+    f.close()
+    tracemalloc.stop()
