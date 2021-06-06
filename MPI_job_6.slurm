@@ -15,4 +15,4 @@ spack load openmpi@3.1.4
 cd $SLURM_SUBMIT_DIR
 
 singularity exec fpcont.sif \
-mpirun -np 6 python3 -m mpi4py /FinalProject/MPI_parabol_pde_solver.py
+mpirun -np 6 python3 -m mpi4py /FP/FinalProject/MPI_parabol_pde_solver.py

@@ -8,11 +8,11 @@
 #SBATCH --partition allgroups
 #SBATCH --ntasks 2
 #SBATCH --mem 1G
-#SBATCH --time 00:10:00
+#SBATCH --time 00:15:00
 
 spack load openmpi@3.1.4
 
 cd $SLURM_SUBMIT_DIR
 
 singularity exec fpcont.sif \
-mpirun -np 2 python3 -m mpi4py /FinalProject/MPI_parabol_pde_solver.py
+mpirun -np 2 python3 -m mpi4py /FP/FinalProject/MPI_parabol_pde_solver.py

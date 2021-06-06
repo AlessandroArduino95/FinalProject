@@ -141,8 +141,8 @@ def f_fun(node):
 
 
 # MAIN CODE
-extr = 5
-step = 0.025
+extr = 10
+step = 0.05
 
 
 x = np.arange(-extr, extr+step, step)
@@ -165,9 +165,9 @@ H, fv = hf_calc(nodes, topology, area, vor_cells)
 
 dir_nodes = np.array(np.concatenate((range(side), range( side * (side-1), side**2, 1), range(side, side*(side-1), side), range(2*side-1, side*(side-1), side))))
 
-fv, H = dirichlet_bc(H, fv, uv_true, dir_nodes, penalty=10**15)
-
-uv, info = linalg.cg(H, fv, atol=10**(-50), tol=10**(-50))
+fv, H = dirichlet_bc(H, fv, uv_true, dir_nodes, penalty=10**20)
+u0 = np.zeros(len(uv_true))
+uv, info = linalg.cg(H, fv, atol=10**(-5), tol=10**(-5))
 
 
 

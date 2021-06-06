@@ -146,40 +146,60 @@ vor_cells = None
 fv = None
 
 # DOMAIN INIZIALIZATION
-extr = 5
-step = 0.025
+extr = 10
+step = 0.05
 
 # SOME EARLY CALCULATIONS ON THE PROBLEM SIZE
 # NODES
-side = 2 * int(extr / step) + 1
-numnodes = side ** 2
-nodes_per_process = math.floor(numnodes / size)
-extra_nodes = math.ceil(numnodes / size)
-countnodes = np.repeat(2 * nodes_per_process, size - 1)
-countnodes = np.append(np.array(2 * extra_nodes), countnodes)
-dispnodes = np.arange(2 * extra_nodes, 2 * numnodes, 2 * nodes_per_process)
-dispnodes = np.append(0, dispnodes)
+side = 2 * int(extr / step) + 1  # 3
+numnodes = side ** 2  # 9
+numextra = numnodes % size  # 0
+nodes_per_process = math.floor(numnodes / size)  # 3
+extra_nodes = math.ceil(numnodes / size)  # 3
+if numextra != 0:
+    countnodes = np.repeat(2 * nodes_per_process, size - numextra)  # [6, 6]
+    countnodes = np.append(np.repeat(np.array(2 * extra_nodes), numextra), countnodes)  # [6, 6, 6]
+else:
+    countnodes = np.repeat(2*nodes_per_process, size)  # [6, 6, 6]
+dispnodes = np.arange(2 * extra_nodes*numextra, 2 * numnodes, 2 * nodes_per_process)  # [0, 6, 12]
+if numextra != 0:
+    dispnodes = np.append(np.arange(0, 2*numextra*extra_nodes, 2*extra_nodes), dispnodes) # [0, 9, 18]
 
 # SOLUTION
-countsol = np.repeat(nodes_per_process, size - 1)
-countsol = np.append(np.array(extra_nodes), countsol)
-dispsol = np.arange(extra_nodes, numnodes, nodes_per_process)
-dispsol = np.append(0, dispsol)
+if numextra != 0:
+    countsol = np.repeat(nodes_per_process, size - numextra)  # [6, 6]
+    countsol = np.append(np.repeat(np.array(extra_nodes), numextra), countsol)  # [6, 6, 6]
+else:
+    countsol = np.repeat(nodes_per_process, size)  # [6, 6, 6]
+dispsol = np.arange(extra_nodes*numextra, numnodes, nodes_per_process)  # [0, 6, 12]
+if numextra != 0:
+    dispsol = np.append(np.arange(0, numextra*extra_nodes, extra_nodes), dispsol) # [0, 9, 18]
+
 
 # TOPOLOGY
-numelem = ((side - 1) ** 2) * 2
-elem_per_process = math.floor(numelem / size)
-extra_elem = math.ceil(numelem / size)
-countelem = np.repeat(3 * elem_per_process, size - 1)
-countelem = np.append(np.array(3 * extra_elem), countelem)
-dispelem = np.arange(3 * extra_elem, 3 * numelem, 3 * elem_per_process)
-dispelem = np.append(0, dispelem)
+numelem = ((side - 1) ** 2) * 2 # 8 [24]
+numextra = numelem % size # 0
+elem_per_process = math.floor(numelem / size) # 4
+extra_elem = math.ceil(numelem / size) # 4
+if numextra != 0:
+    countelem = np.repeat(3 * elem_per_process, size - numextra)  # [6]
+    countelem = np.append(np.repeat(np.array(3 * extra_elem), numextra), countelem) # [9, 9, 6]
+else:
+    countelem = np.repeat(3*elem_per_process,size)  # [12, 12]
+dispelem = np.arange(3 * extra_elem * numextra, 3 * numelem, 3 * elem_per_process) # [
+if numextra != 0:
+    dispelem = np.append(np.arange(0, 3*numextra*extra_elem, 3*extra_elem), dispelem) # [0, 9, 18]
+
 
 # VORONOI CELLS
-countvor = np.repeat(elem_per_process, size - 1)
-countvor = np.append(np.array(extra_elem), countvor)
-dispvor = np.arange(extra_elem, numelem, elem_per_process)
-dispvor = np.append(0, dispvor)
+if numextra != 0:
+    countvor = np.repeat(elem_per_process, size - numextra)  # [6]
+    countvor = np.append(np.repeat(np.array(extra_elem), numextra), countvor) # [9, 9, 6]
+else:
+    countvor = np.repeat(elem_per_process,size)  # [12, 12]
+dispvor = np.arange(extra_elem * numextra, numelem, elem_per_process) # [
+if numextra != 0:
+    dispvor = np.append(np.arange(0, numextra*extra_elem, extra_elem), dispvor) # [0, 9, 18]
 
 if rank == root_pr:
     x = np.arange(-extr, extr + step, step)
@@ -250,6 +270,9 @@ if rank == root_pr:
                                          range(side, side * (side - 1), side),
                                          range(2 * side - 1, side * (side - 1), side))))
 
-    fv, H = dirichlet_bc(H, fv, uv_true, dir_nodes, penalty=10 ** 15)
+    fv, H = dirichlet_bc(H, fv, uv_true, dir_nodes, penalty=10 ** 20)
+    u0 = np.zeros(len(uv_true))
+    uv, info = linalg.cg(H, fv, x0=u0, atol=10 ** (-5), tol=10 ** (-5))
 
-    uv, info = linalg.cg(H, fv, atol=10 ** (-50), tol=10 ** (-50))
+
+
