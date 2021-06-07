@@ -8,7 +8,6 @@ from scipy.sparse import linalg
 import math
 
 
-
 # FUNCTIONS
 
 
@@ -153,53 +152,53 @@ step = 0.05
 # NODES
 side = 2 * int(extr / step) + 1  # 3
 numnodes = side ** 2  # 9
-numextra = numnodes % size  # 0
+numextranodes = numnodes % size  # 0
 nodes_per_process = math.floor(numnodes / size)  # 3
 extra_nodes = math.ceil(numnodes / size)  # 3
-if numextra != 0:
-    countnodes = np.repeat(2 * nodes_per_process, size - numextra)  # [6, 6]
-    countnodes = np.append(np.repeat(np.array(2 * extra_nodes), numextra), countnodes)  # [6, 6, 6]
+if numextranodes != 0:
+    countnodes = np.repeat(2 * nodes_per_process, size - numextranodes)  # [6, 6]
+    countnodes = np.append(np.repeat(np.array(2 * extra_nodes), numextranodes), countnodes)  # [6, 6, 6]
 else:
     countnodes = np.repeat(2*nodes_per_process, size)  # [6, 6, 6]
-dispnodes = np.arange(2 * extra_nodes*numextra, 2 * numnodes, 2 * nodes_per_process)  # [0, 6, 12]
-if numextra != 0:
-    dispnodes = np.append(np.arange(0, 2*numextra*extra_nodes, 2*extra_nodes), dispnodes) # [0, 9, 18]
+dispnodes = np.arange(2 * extra_nodes*numextranodes, 2 * numnodes, 2 * nodes_per_process)  # [0, 6, 12]
+if numextranodes != 0:
+    dispnodes = np.append(np.arange(0, 2*numextranodes*extra_nodes, 2*extra_nodes), dispnodes) # [0, 9, 18]
+
+if rank < numextranodes:
+    recvnodes = np.empty([extra_nodes, 2], dtype=np.float64)
+else:
+    recvnodes = np.empty([nodes_per_process, 2], dtype=np.float64)
 
 # SOLUTION
-if numextra != 0:
-    countsol = np.repeat(nodes_per_process, size - numextra)  # [6, 6]
-    countsol = np.append(np.repeat(np.array(extra_nodes), numextra), countsol)  # [6, 6, 6]
+if numextranodes != 0:
+    countsol = np.repeat(nodes_per_process, size - numextranodes)  # [6, 6]
+    countsol = np.append(np.repeat(np.array(extra_nodes), numextranodes), countsol)  # [6, 6, 6]
 else:
     countsol = np.repeat(nodes_per_process, size)  # [6, 6, 6]
-dispsol = np.arange(extra_nodes*numextra, numnodes, nodes_per_process)  # [0, 6, 12]
-if numextra != 0:
-    dispsol = np.append(np.arange(0, numextra*extra_nodes, extra_nodes), dispsol) # [0, 9, 18]
-
+dispsol = np.arange(extra_nodes*numextranodes, numnodes, nodes_per_process)  # [0, 6, 12]
+if numextranodes != 0:
+    dispsol = np.append(np.arange(0, numextranodes*extra_nodes, extra_nodes), dispsol) # [0, 9, 18]
 
 # TOPOLOGY
 numelem = ((side - 1) ** 2) * 2 # 8 [24]
-numextra = numelem % size # 0
-elem_per_process = math.floor(numelem / size) # 4
-extra_elem = math.ceil(numelem / size) # 4
-if numextra != 0:
-    countelem = np.repeat(3 * elem_per_process, size - numextra)  # [6]
-    countelem = np.append(np.repeat(np.array(3 * extra_elem), numextra), countelem) # [9, 9, 6]
+numextrael = numelem % size # 2
+elem_per_process = math.floor(numelem / size) # 2
+extra_elem = math.ceil(numelem / size) # 3
+if numextrael != 0:
+    countelem = np.repeat(3 * elem_per_process, size - numextrael)  # [6]
+    countelem = np.append(np.repeat(np.array(3 * extra_elem), numextrael), countelem) # [9, 9, 6]
 else:
     countelem = np.repeat(3*elem_per_process,size)  # [12, 12]
-dispelem = np.arange(3 * extra_elem * numextra, 3 * numelem, 3 * elem_per_process) # [
-if numextra != 0:
-    dispelem = np.append(np.arange(0, 3*numextra*extra_elem, 3*extra_elem), dispelem) # [0, 9, 18]
+dispelem = np.arange(3 * extra_elem * numextrael, 3 * numelem, 3 * elem_per_process) # [18]
+if numextrael != 0:
+    dispelem = np.append(np.arange(0, 3*numextrael*extra_elem, 3*extra_elem), dispelem) # [0, 9, 18]
 
-
-# VORONOI CELLS
-if numextra != 0:
-    countvor = np.repeat(elem_per_process, size - numextra)  # [6]
-    countvor = np.append(np.repeat(np.array(extra_elem), numextra), countvor) # [9, 9, 6]
+if rank < numextrael:
+    recvtop = np.empty([extra_elem, 3], dtype=np.int32)
 else:
-    countvor = np.repeat(elem_per_process,size)  # [12, 12]
-dispvor = np.arange(extra_elem * numextra, numelem, elem_per_process) # [
-if numextra != 0:
-    dispvor = np.append(np.arange(0, numextra*extra_elem, extra_elem), dispvor) # [0, 9, 18]
+    recvtop = np.empty([elem_per_process, 3], dtype=np.int32)
+
+
 
 if rank == root_pr:
     x = np.arange(-extr, extr + step, step)
@@ -214,11 +213,9 @@ if rank == root_pr:
     area = np.linalg.det(shape) / 2
     vor_cells = const_voronoi_cells(topology, area, nodes)
     sendnodes = nodes.flatten().astype("float64")
-    recvnodes = np.empty([extra_nodes, 2], dtype=np.float64)
     uv_true = np.empty(numnodes, dtype=np.float64)
     fv = np.empty(numnodes, dtype=np.float64)
-else:
-    recvnodes = np.empty([nodes_per_process, 2], dtype=np.float64)
+
 
 comm.Scatterv([sendnodes, countnodes, dispnodes, MPI.DOUBLE], recvnodes, root=root_pr)
 locnodes = recvnodes
@@ -234,9 +231,6 @@ H = sparse.lil_matrix((numnodes, numnodes))
 
 if rank == root_pr:
     sendtop = topology.flatten().astype('int32')
-    recvtop = np.empty([extra_elem, 3], dtype=np.int32)
-else:
-    recvtop = np.empty([elem_per_process, 3], dtype=np.int32)
 
 comm.Scatterv([sendtop, countelem, dispelem, MPI.INT], recvtop, root=root_pr)
 loc_topology = recvtop
@@ -273,6 +267,3 @@ if rank == root_pr:
     fv, H = dirichlet_bc(H, fv, uv_true, dir_nodes, penalty=10 ** 20)
     u0 = np.zeros(len(uv_true))
     uv, info = linalg.cg(H, fv, x0=u0, atol=10 ** (-5), tol=10 ** (-5))
-
-
-
